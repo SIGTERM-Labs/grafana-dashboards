@@ -890,6 +890,234 @@
           }
         }
       },
+      "panel-31": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "$DS_OPENSHIFT_PROMETHEUS"
+                      },
+                      "group": "",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "label_join(max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"} and predict_linear(kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}[1d], 7 * 24 * 60 * 60) \u003c 0), \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "$DS_OPENSHIFT_PROMETHEUS"
+                      },
+                      "group": "",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "label_join((max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) / (max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})), \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "B"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "$DS_OPENSHIFT_PROMETHEUS"
+                      },
+                      "group": "",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "label_join(max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"} and predict_linear(kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}[1d], 7 * 24 * 60 * 60) \u003c 0) / clamp_min(-max by (namespace, persistentvolumeclaim) (deriv(kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}[1d])), 1e-9) / 86400, \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "C"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                {
+                  "group": "joinByField",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "byField": "volume",
+                      "mode": "inner"
+                    }
+                  }
+                },
+                {
+                  "group": "organize",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "Time 1": true,
+                        "Time 2": true,
+                        "namespace 1": true,
+                        "namespace 2": true,
+                        "persistentvolumeclaim 1": true,
+                        "persistentvolumeclaim 2": true,
+                        "volume": true
+                      },
+                      "indexByName": {
+                        "Value #A": 2,
+                        "Value #B": 3,
+                        "Value #C": 4,
+                        "namespace": 0,
+                        "persistentvolumeclaim": 1
+                      },
+                      "renameByName": {
+                        "Value #A": "Available",
+                        "Value #B": "% Used",
+                        "Value #C": "Days to full",
+                        "namespace": "Namespace",
+                        "persistentvolumeclaim": "PVC"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "PVCs whose available space is projected to hit zero within 7 days, based on the last day's growth rate.",
+          "id": 31,
+          "links": [],
+          "title": "Volumes filling within 7 days",
+          "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "filterable": true,
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Available"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "bytes"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "% Used"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percentunit"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Days to full"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "d"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 1
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "red",
+                              "value": 0
+                            },
+                            {
+                              "color": "orange",
+                              "value": 3
+                            },
+                            {
+                              "color": "yellow",
+                              "value": 7
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": false,
+                    "displayName": "Days to full"
+                  }
+                ]
+              }
+            },
+            "version": "12.4.2"
+          }
+        }
+      },
       "panel-4": {
         "kind": "Panel",
         "spec": {
@@ -1397,7 +1625,20 @@
                           "kind": "ElementReference",
                           "name": "panel-10"
                         },
-                        "height": 12,
+                        "height": 10,
+                        "width": 24,
+                        "x": 0,
+                        "y": 8
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-31"
+                        },
+                        "height": 5,
                         "width": 24,
                         "x": 0,
                         "y": 3
