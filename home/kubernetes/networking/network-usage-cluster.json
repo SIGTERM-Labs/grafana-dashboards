@@ -2729,7 +2729,7 @@
       "timezone": "browser",
       "to": "now"
     },
-    "title": "Cluster",
+    "title": "Network Usage (Cluster)",
     "variables": [
       {
         "kind": "IntervalVariable",
