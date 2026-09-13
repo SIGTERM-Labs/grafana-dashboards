@@ -30,7 +30,7 @@
       }
     ],
     "cursorSync": "Crosshair",
-    "description": "Dashboard of Kubernetes / OpenShift volume information at cluster level as exported by Prometheus connected to Kubernetes / OpenShift.",
+    "description": "Kubernetes volume usage across the cluster. Use the namespace and PVC filters to focus the table and charts.",
     "editable": true,
     "elements": {
       "panel-10": {
@@ -240,7 +240,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "count (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes{persistentvolumeclaim!~\"$pvc_exclude_pattern\"} ) and (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes )) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_capacity_bytes )) \u003e= ($pvc_percent_used_warning_threshold / 100)) or vector (0)",
+                        "expr": "count (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}) and (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_capacity_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) \u003e= ($pvc_percent_used_warning_threshold / 100)) or vector (0)",
                         "format": "time_series",
                         "instant": true
                       },
@@ -339,7 +339,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes )) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_capacity_bytes{persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) * 100",
+                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_capacity_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) * 100",
                         "intervalFactor": 1,
                         "legendFormat": "{{namespace}} ({{persistentvolumeclaim}})",
                         "range": true
@@ -439,7 +439,7 @@
                 },
                 "tooltip": {
                   "hideZeros": false,
-                  "mode": "multi",
+                  "mode": "single",
                   "sort": "none"
                 }
               }
@@ -467,7 +467,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes{persistentvolumeclaim!~\"$pvc_exclude_pattern\"}))",
+                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}))",
                         "instant": false,
                         "intervalFactor": 1,
                         "legendFormat": "{{namespace}} ({{persistentvolumeclaim}})"
@@ -561,7 +561,7 @@
                 },
                 "tooltip": {
                   "hideZeros": false,
-                  "mode": "multi",
+                  "mode": "single",
                   "sort": "none"
                 }
               }
@@ -589,7 +589,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "rate(kubelet_volume_stats_used_bytes{persistentvolumeclaim!~\"$pvc_exclude_pattern\"} [1h])",
+                        "expr": "rate(kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"} [1h])",
                         "format": "time_series",
                         "instant": false,
                         "intervalFactor": 1,
@@ -683,7 +683,7 @@
                 },
                 "tooltip": {
                   "hideZeros": false,
-                  "mode": "multi",
+                  "mode": "single",
                   "sort": "asc"
                 }
               }
@@ -710,7 +710,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "(\n  count (\n    (kubelet_volume_stats_available_bytes {namespace=~\"(openshift-.*|kube-.*|default|logging)\"})\n    and\n    (predict_linear(kubelet_volume_stats_available_bytes {namespace=~\"(openshift-.*|kube-.*|default|logging)\"}[1d], 7 * 24 * 60 * 60) \u003c 0)\n  )\n)\nor\nvector(0)",
+                        "expr": "(\n  count (\n    (kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})\n    and\n    (predict_linear(kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}[1d], 7 * 24 * 60 * 60) \u003c 0)\n  )\n)\nor\nvector(0)",
                         "instant": false,
                         "intervalFactor": 1,
                         "legendFormat": "alerts"
@@ -729,105 +729,7 @@
           },
           "id": 30,
           "links": [],
-          "title": "Infrastructure Namespace Volumes Full in Week Based on Daily Use Rate",
-          "vizConfig": {
-            "group": "stat",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [
-                    {
-                      "options": {
-                        "match": "null",
-                        "result": {
-                          "text": "N/A"
-                        }
-                      },
-                      "type": "special"
-                    }
-                  ],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "#299c46",
-                        "value": 0
-                      },
-                      {
-                        "color": "rgba(237, 129, 40, 0.89)",
-                        "value": 1
-                      },
-                      {
-                        "color": "#d44a3a",
-                        "value": 1
-                      }
-                    ]
-                  },
-                  "unit": "none"
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "background",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "horizontal",
-                "percentChangeColorMode": "standard",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showPercentChange": false,
-                "textMode": "auto",
-                "wideLayout": true
-              }
-            },
-            "version": "12.4.2"
-          }
-        }
-      },
-      "panel-34": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "$DS_OPENSHIFT_PROMETHEUS"
-                      },
-                      "group": "",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "expr": "(\n  count (\n    (\n      (kubelet_volume_stats_available_bytes {namespace!~\"(openshift-.*|kube-.*|default|logging)\"})\n    )\n    and\n    (predict_linear(kubelet_volume_stats_available_bytes[1d], 7 * 24 * 60 * 60) \u003c 0)\n  )\n)\nor\nvector(0)",
-                        "instant": false,
-                        "intervalFactor": 1,
-                        "legendFormat": "alerts"
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {
-                "maxDataPoints": 100
-              },
-              "transformations": []
-            }
-          },
-          "id": 34,
-          "links": [],
-          "title": "User Namespace Volumes Full in Week Based on Daily Use Rate",
+          "title": "Volumes Predicted Full in 7 Days",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -907,7 +809,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(sum (kube_persistentvolume_status_phase{phase=\"Bound\"})) or vector(0)",
+                        "expr": "(sum (kube_persistentvolumeclaim_status_phase{phase=\"Bound\", namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\"})) or vector(0)",
                         "format": "table",
                         "instant": true
                       },
@@ -1003,7 +905,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_inodes_used )) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_inodes{persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) * 100",
+                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_inodes_used{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_inodes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) * 100",
                         "instant": false,
                         "legendFormat": "{{namespace}}/{{persistentvolumeclaim}}",
                         "range": true
@@ -1096,7 +998,7 @@
                 },
                 "tooltip": {
                   "hideZeros": false,
-                  "mode": "multi",
+                  "mode": "single",
                   "sort": "none"
                 }
               }
@@ -1124,7 +1026,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_available_bytes{persistentvolumeclaim!~\"$pvc_exclude_pattern\"})",
+                        "expr": "max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})",
                         "instant": false,
                         "intervalFactor": 1,
                         "legendFormat": "{{namespace}} ({{persistentvolumeclaim}})"
@@ -1216,7 +1118,7 @@
                 },
                 "tooltip": {
                   "hideZeros": false,
-                  "mode": "multi",
+                  "mode": "single",
                   "sort": "asc"
                 }
               }
@@ -1243,7 +1145,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "(max (sum by (namespace) (pv_collector_unbound_pvc_count))) or (vector(0))",
+                        "expr": "(sum (kube_persistentvolumeclaim_status_phase{phase=~\"Pending|Lost\", namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\"})) or vector(0)",
                         "format": "table",
                         "instant": true
                       },
@@ -1520,7 +1422,6 @@
     "liveNow": false,
     "preload": false,
     "tags": [
-      "openshift",
       "k8s",
       "storage"
     ],
