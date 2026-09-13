@@ -1922,7 +1922,7 @@
       "timezone": "browser",
       "to": "now"
     },
-    "title": "Namespaces",
+    "title": "Network Usage (Namespaces)",
     "variables": [
       {
         "kind": "DatasourceVariable",
