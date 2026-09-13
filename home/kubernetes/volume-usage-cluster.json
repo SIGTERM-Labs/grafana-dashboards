@@ -52,52 +52,9 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "kube_persistentvolumeclaim_info",
+                        "expr": "label_join(max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}), \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
                         "format": "table",
                         "instant": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "E"
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "$DS_OPENSHIFT_PROMETHEUS"
-                      },
-                      "group": "",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "(1-max by (persistentvolumeclaim, namespace) (kube_persistentvolumeclaim_info ) ) unless (max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes )) or ((max by (persistentvolumeclaim, namespace) (kube_persistentvolumeclaim_info ) ) and (max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes )))",
-                        "format": "table",
-                        "instant": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "F"
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "$DS_OPENSHIFT_PROMETHEUS"
-                      },
-                      "group": "",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes)",
-                        "format": "table",
-                        "instant": true,
-                        "intervalFactor": 1
                       },
                       "version": "v0"
                     },
@@ -116,7 +73,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_capacity_bytes )",
+                        "expr": "label_join(max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}), \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
                         "format": "table",
                         "instant": true
                       },
@@ -137,7 +94,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_available_bytes )",
+                        "expr": "label_join(max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"}), \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
                         "format": "table",
                         "instant": true
                       },
@@ -158,7 +115,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_used_bytes )) / (max by (persistentvolumeclaim,namespace) (kubelet_volume_stats_capacity_bytes ))",
+                        "expr": "label_join((max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})) / (max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{namespace=~\"${namespace:regex}\", persistentvolumeclaim=~\"${pvc:regex}\", persistentvolumeclaim!~\"$pvc_exclude_pattern\"})), \"volume\", \"/\", \"namespace\", \"persistentvolumeclaim\")",
                         "format": "table",
                         "instant": true
                       },
@@ -169,17 +126,60 @@
                 }
               ],
               "queryOptions": {},
-              "transformations": []
+              "transformations": [
+                {
+                  "group": "joinByField",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "byField": "volume",
+                      "mode": "outer"
+                    }
+                  }
+                },
+                {
+                  "group": "organize",
+                  "kind": "Transformation",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "Time 1": true,
+                        "Time 2": true,
+                        "Time 3": true,
+                        "namespace 1": true,
+                        "namespace 2": true,
+                        "namespace 3": true,
+                        "persistentvolumeclaim 1": true,
+                        "persistentvolumeclaim 2": true,
+                        "persistentvolumeclaim 3": true,
+                        "volume": true
+                      },
+                      "indexByName": {
+                        "Value #A": 2,
+                        "Value #B": 3,
+                        "Value #C": 4,
+                        "Value #D": 5,
+                        "namespace": 0,
+                        "persistentvolumeclaim": 1
+                      },
+                      "renameByName": {
+                        "Value #A": "Used",
+                        "Value #B": "Capacity",
+                        "Value #C": "Available",
+                        "Value #D": "% Used",
+                        "namespace": "Namespace",
+                        "persistentvolumeclaim": "PVC"
+                      }
+                    }
+                  }
+                }
+              ]
             }
           },
           "id": 10,
-          "links": [
-            {
-              "title": "OpenShift Container Storage (OCS) 3.11: Operations Guide: 10.1. Available Metrics for File Storage and Block Storage",
-              "url": "https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/3.11/html/operations_guide/enable_vol_metrics#file_vol_metrics"
-            }
-          ],
-          "title": "PVC Stats",
+          "links": [],
+          "title": "PVC Usage",
           "vizConfig": {
             "group": "table",
             "kind": "VizConfig",
@@ -191,6 +191,7 @@
                     "cellOptions": {
                       "type": "auto"
                     },
+                    "filterable": true,
                     "footer": {
                       "reducers": []
                     },
@@ -204,17 +205,116 @@
                         "value": 0
                       },
                       {
-                        "color": "red",
+                        "color": "orange",
                         "value": 80
+                      },
+                      {
+                        "color": "red",
+                        "value": 95
                       }
                     ]
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Used"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "bytes"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Capacity"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "bytes"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Available"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "bytes"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "% Used"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percentunit"
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 1
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 1
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "lcd",
+                          "type": "gauge"
+                        }
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "green",
+                              "value": 0
+                            },
+                            {
+                              "color": "orange",
+                              "value": 0.8
+                            },
+                            {
+                              "color": "red",
+                              "value": 0.95
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "cellHeight": "sm",
-                "showHeader": true
+                "enablePagination": true,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "% Used"
+                  }
+                ]
               }
             },
             "version": "12.4.2"
@@ -1256,7 +1356,7 @@
                       "spec": {
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-34"
+                          "name": "panel-12"
                         },
                         "height": 3,
                         "width": 6,
@@ -1269,7 +1369,7 @@
                       "spec": {
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-12"
+                          "name": "panel-4"
                         },
                         "height": 3,
                         "width": 6,
@@ -1289,33 +1389,6 @@
                         "x": 18,
                         "y": 0
                       }
-                    }
-                  ]
-                }
-              },
-              "title": "Overview"
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "collapse": true,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-4"
-                        },
-                        "height": 4,
-                        "width": 4,
-                        "x": 0,
-                        "y": 0
-                      }
                     },
                     {
                       "kind": "GridLayoutItem",
@@ -1324,16 +1397,16 @@
                           "kind": "ElementReference",
                           "name": "panel-10"
                         },
-                        "height": 20,
+                        "height": 12,
                         "width": 24,
                         "x": 0,
-                        "y": 4
+                        "y": 3
                       }
                     }
                   ]
                 }
               },
-              "title": "Stats"
+              "title": "Overview"
             }
           },
           {
@@ -1369,7 +1442,21 @@
                         "x": 0,
                         "y": 8
                       }
-                    },
+                    }
+                  ]
+                }
+              },
+              "title": "Usage"
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "collapse": true,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
@@ -1377,10 +1464,10 @@
                           "kind": "ElementReference",
                           "name": "panel-17"
                         },
-                        "height": 9,
+                        "height": 8,
                         "width": 24,
                         "x": 0,
-                        "y": 16
+                        "y": 0
                       }
                     },
                     {
@@ -1393,7 +1480,7 @@
                         "height": 8,
                         "width": 24,
                         "x": 0,
-                        "y": 25
+                        "y": 8
                       }
                     },
                     {
@@ -1406,13 +1493,13 @@
                         "height": 8,
                         "width": 24,
                         "x": 0,
-                        "y": 33
+                        "y": 16
                       }
                     }
                   ]
                 }
               },
-              "title": "Use"
+              "title": "Trends"
             }
           }
         ]
