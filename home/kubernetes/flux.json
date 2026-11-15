@@ -887,8 +887,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "count by (ready) (flux_resource_info{kind=~\"$kind\", namespace=~\"$namespace\", suspended=\"False\"})",
-                        "legendFormat": "Ready={{ready}}",
+                        "expr": "count(flux_resource_info{kind=~\"$kind\", namespace=~\"$namespace\", suspended=\"False\", ready=\"True\"}) or vector(0)",
+                        "legendFormat": "Ready=True",
                         "range": true
                       },
                       "version": "v0"
@@ -908,13 +908,55 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "count(flux_resource_info{kind=~\"$kind\", namespace=~\"$namespace\", suspended=\"True\"})",
-                        "legendFormat": "Suspended",
+                        "expr": "count(flux_resource_info{kind=~\"$kind\", namespace=~\"$namespace\", suspended=\"False\", ready=\"False\"}) or vector(0)",
+                        "legendFormat": "Ready=False",
                         "range": true
                       },
                       "version": "v0"
                     },
                     "refId": "B"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count(flux_resource_info{kind=~\"$kind\", namespace=~\"$namespace\", suspended=\"False\", ready=\"Unknown\"}) or vector(0)",
+                        "legendFormat": "Ready=Unknown",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "C"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count(flux_resource_info{kind=~\"$kind\", namespace=~\"$namespace\", suspended=\"True\"}) or vector(0)",
+                        "legendFormat": "Suspended",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "D"
                   }
                 }
               ],
