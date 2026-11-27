@@ -6690,6 +6690,368 @@
               }
             }
           }
+        },
+        "panel-116": {
+          "kind": "Panel",
+          "spec": {
+            "id": 116,
+            "title": "Bucket Size",
+            "description": "Space each RGW bucket takes, from radosgw-admin bucket stats every 5 minutes.",
+            "links": [],
+            "data": {
+              "kind": "QueryGroup",
+              "spec": {
+                "queries": [
+                  {
+                    "kind": "PanelQuery",
+                    "spec": {
+                      "query": {
+                        "kind": "DataQuery",
+                        "group": "prometheus",
+                        "version": "v0",
+                        "datasource": {
+                          "name": "${datasource}"
+                        },
+                        "spec": {
+                          "expr": "max by (bucket) (rgw_bucket_size_bytes)",
+                          "legendFormat": "{{bucket}}",
+                          "range": true,
+                          "instant": false
+                        }
+                      },
+                      "refId": "A",
+                      "hidden": false
+                    }
+                  }
+                ],
+                "transformations": [],
+                "queryOptions": {}
+              }
+            },
+            "vizConfig": {
+              "kind": "VizConfig",
+              "group": "timeseries",
+              "version": "10.3.3",
+              "spec": {
+                "options": {
+                  "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "calcs": [
+                      "lastNotNull",
+                      "max"
+                    ],
+                    "sortBy": "Last *",
+                    "sortDesc": true
+                  },
+                  "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                  }
+                },
+                "fieldConfig": {
+                  "defaults": {
+                    "unit": "bytes",
+                    "min": 0,
+                    "color": {
+                      "mode": "palette-classic"
+                    },
+                    "custom": {
+                      "drawStyle": "line",
+                      "lineWidth": 1,
+                      "fillOpacity": 10,
+                      "showPoints": "never",
+                      "spanNulls": true,
+                      "stacking": {
+                        "group": "A",
+                        "mode": "none"
+                      }
+                    }
+                  },
+                  "overrides": []
+                }
+              }
+            }
+          }
+        },
+        "panel-117": {
+          "kind": "Panel",
+          "spec": {
+            "id": 117,
+            "title": "Bucket Quota Used",
+            "description": "Bucket size as a share of its quota. Buckets without a quota are left out.",
+            "links": [],
+            "data": {
+              "kind": "QueryGroup",
+              "spec": {
+                "queries": [
+                  {
+                    "kind": "PanelQuery",
+                    "spec": {
+                      "query": {
+                        "kind": "DataQuery",
+                        "group": "prometheus",
+                        "version": "v0",
+                        "datasource": {
+                          "name": "${datasource}"
+                        },
+                        "spec": {
+                          "expr": "max by (bucket) (rgw_bucket_size_bytes) / max by (bucket) (rgw_bucket_quota_max_size_bytes)",
+                          "legendFormat": "{{bucket}}",
+                          "range": false,
+                          "instant": true
+                        }
+                      },
+                      "refId": "A",
+                      "hidden": false
+                    }
+                  }
+                ],
+                "transformations": [],
+                "queryOptions": {}
+              }
+            },
+            "vizConfig": {
+              "kind": "VizConfig",
+              "group": "bargauge",
+              "version": "10.3.3",
+              "spec": {
+                "options": {
+                  "orientation": "horizontal",
+                  "displayMode": "gradient",
+                  "showUnfilled": true,
+                  "valueMode": "color",
+                  "namePlacement": "top",
+                  "sizing": "auto",
+                  "reduceOptions": {
+                    "calcs": [
+                      "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                  }
+                },
+                "fieldConfig": {
+                  "defaults": {
+                    "unit": "percentunit",
+                    "min": 0,
+                    "max": 1,
+                    "decimals": 1,
+                    "color": {
+                      "mode": "thresholds"
+                    },
+                    "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "value": null,
+                          "color": "green"
+                        },
+                        {
+                          "value": 0.8,
+                          "color": "orange"
+                        },
+                        {
+                          "value": 0.9,
+                          "color": "red"
+                        }
+                      ]
+                    }
+                  },
+                  "overrides": []
+                }
+              }
+            }
+          }
+        },
+        "panel-118": {
+          "kind": "Panel",
+          "spec": {
+            "id": 118,
+            "title": "Bucket Quota Used Over Time",
+            "description": "Bucket size as a share of its quota.",
+            "links": [],
+            "data": {
+              "kind": "QueryGroup",
+              "spec": {
+                "queries": [
+                  {
+                    "kind": "PanelQuery",
+                    "spec": {
+                      "query": {
+                        "kind": "DataQuery",
+                        "group": "prometheus",
+                        "version": "v0",
+                        "datasource": {
+                          "name": "${datasource}"
+                        },
+                        "spec": {
+                          "expr": "max by (bucket) (rgw_bucket_size_bytes) / max by (bucket) (rgw_bucket_quota_max_size_bytes)",
+                          "legendFormat": "{{bucket}}",
+                          "range": true,
+                          "instant": false
+                        }
+                      },
+                      "refId": "A",
+                      "hidden": false
+                    }
+                  }
+                ],
+                "transformations": [],
+                "queryOptions": {}
+              }
+            },
+            "vizConfig": {
+              "kind": "VizConfig",
+              "group": "timeseries",
+              "version": "10.3.3",
+              "spec": {
+                "options": {
+                  "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "calcs": [
+                      "lastNotNull"
+                    ],
+                    "sortBy": "Last *",
+                    "sortDesc": true
+                  },
+                  "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                  }
+                },
+                "fieldConfig": {
+                  "defaults": {
+                    "unit": "percentunit",
+                    "min": 0,
+                    "max": 1,
+                    "color": {
+                      "mode": "palette-classic"
+                    },
+                    "thresholds": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "value": null,
+                          "color": "green"
+                        },
+                        {
+                          "value": 0.8,
+                          "color": "orange"
+                        },
+                        {
+                          "value": 0.9,
+                          "color": "red"
+                        }
+                      ]
+                    },
+                    "custom": {
+                      "drawStyle": "line",
+                      "lineWidth": 1,
+                      "fillOpacity": 10,
+                      "showPoints": "never",
+                      "spanNulls": true,
+                      "stacking": {
+                        "group": "A",
+                        "mode": "none"
+                      },
+                      "thresholdsStyle": {
+                        "mode": "dashed"
+                      }
+                    }
+                  },
+                  "overrides": []
+                }
+              }
+            }
+          }
+        },
+        "panel-119": {
+          "kind": "Panel",
+          "spec": {
+            "id": 119,
+            "title": "Bucket Objects",
+            "description": "Objects in each RGW bucket.",
+            "links": [],
+            "data": {
+              "kind": "QueryGroup",
+              "spec": {
+                "queries": [
+                  {
+                    "kind": "PanelQuery",
+                    "spec": {
+                      "query": {
+                        "kind": "DataQuery",
+                        "group": "prometheus",
+                        "version": "v0",
+                        "datasource": {
+                          "name": "${datasource}"
+                        },
+                        "spec": {
+                          "expr": "max by (bucket) (rgw_bucket_objects)",
+                          "legendFormat": "{{bucket}}",
+                          "range": true,
+                          "instant": false
+                        }
+                      },
+                      "refId": "A",
+                      "hidden": false
+                    }
+                  }
+                ],
+                "transformations": [],
+                "queryOptions": {}
+              }
+            },
+            "vizConfig": {
+              "kind": "VizConfig",
+              "group": "timeseries",
+              "version": "10.3.3",
+              "spec": {
+                "options": {
+                  "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "showLegend": true,
+                    "calcs": [
+                      "lastNotNull",
+                      "max"
+                    ],
+                    "sortBy": "Last *",
+                    "sortDesc": true
+                  },
+                  "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                  }
+                },
+                "fieldConfig": {
+                  "defaults": {
+                    "unit": "short",
+                    "min": 0,
+                    "color": {
+                      "mode": "palette-classic"
+                    },
+                    "custom": {
+                      "drawStyle": "line",
+                      "lineWidth": 1,
+                      "fillOpacity": 10,
+                      "showPoints": "never",
+                      "spanNulls": true,
+                      "stacking": {
+                        "group": "A",
+                        "mode": "none"
+                      }
+                    }
+                  },
+                  "overrides": []
+                }
+              }
+            }
+          }
         }
       },
       "layout": {
@@ -7198,6 +7560,72 @@
                           "element": {
                             "kind": "ElementReference",
                             "name": "panel-115"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "kind": "RowsLayoutRow",
+              "spec": {
+                "title": "RGW BUCKETS",
+                "collapse": false,
+                "layout": {
+                  "kind": "GridLayout",
+                  "spec": {
+                    "items": [
+                      {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                          "x": 0,
+                          "y": 0,
+                          "width": 16,
+                          "height": 8,
+                          "element": {
+                            "kind": "ElementReference",
+                            "name": "panel-116"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                          "x": 16,
+                          "y": 0,
+                          "width": 8,
+                          "height": 8,
+                          "element": {
+                            "kind": "ElementReference",
+                            "name": "panel-117"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                          "x": 0,
+                          "y": 8,
+                          "width": 12,
+                          "height": 8,
+                          "element": {
+                            "kind": "ElementReference",
+                            "name": "panel-118"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                          "x": 12,
+                          "y": 8,
+                          "width": 12,
+                          "height": 8,
+                          "element": {
+                            "kind": "ElementReference",
+                            "name": "panel-119"
                           }
                         }
                       }
